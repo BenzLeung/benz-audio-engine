@@ -30,7 +30,9 @@
 <script src="benzAudioEngine.js"></script>
 <script>
     (function () {
-        var getEl = document.getElementById;
+        var getEl = function (id) {
+            return document.getElementById(id);
+        };
 
         // 检测是否支持 Web Audio API
         getEl('isSupport').innerHTML = benzAudioEngine.support() ? 'Yes!' : 'No.';
@@ -61,7 +63,7 @@
 
         // 播放/继续播放循环音乐，循环从2.40秒到88.80秒
         var marioID = 0;
-        getEl('play').onclick = function () {
+        getEl('music_play').onclick = function () {
             if (marioID) {
                 benzAudioEngine.resume(marioID);
             } else {
@@ -70,12 +72,12 @@
         };
 
         // 暂停循环音乐
-        getEl('pause').onclick = function () {
+        getEl('music_pause').onclick = function () {
             benzAudioEngine.pause(marioID);
         };
 
         // 停止循环音乐
-        getEl('stop').onclick = function () {
+        getEl('music_stop').onclick = function () {
             benzAudioEngine.stop(marioID);
             marioID = 0;
         };
