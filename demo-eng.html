@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0"/>
+    <meta name="format-detection" content="telephone=no"/>
+    <title>Benz Audio Engine Demo</title>
+</head>
+<body>
+<h1>Benz Audio Engine Demo</h1>
+<p>
+    <label for="isSupport">Is supported：</label>
+    <strong id="isSupport"></strong>
+</p>
+<p>
+    <label for="volume">Volume：</label>
+    <input id="volume" type="range" value="1" step="0.01" max="1" min="0" disabled>
+</p>
+<p>
+    <label>Loop music：</label>
+    <input type="button" id="music_play" disabled value="播放">
+    <input type="button" id="music_pause" disabled value="暂停">
+    <input type="button" id="music_stop" disabled value="停止">
+</p>
+<p>
+    <label>Sound Effects：</label>
+    <input type="button" id="jump" disabled value="跳！"/>
+    <input type="button" id="gold" disabled value="金币！"/>
+    <input type="button" id="kick" disabled value="踩！"/>
+</p>
+
+<script src="benzAudioEngine.js"></script>
+<script>
+    (function () {
+        var getEl = function (id) {
+            return document.getElementById(id);
+        };
+
+        // Whether system is supported Web Audio API
+        getEl('isSupport').innerHTML = benzAudioEngine.support() ? 'Yes!' : 'No.';
+        if (benzAudioEngine.support()) {
+            getEl('volume').removeAttribute('disabled');
+        }
+
+        // set volume
+        getEl('volume').onchange = function () {
+            benzAudioEngine.setVolume(this.value);
+        };
+
+        // load audio resource
+        benzAudioEngine.load('res/mario.mp3', function () {
+            getEl('music_play').removeAttribute('disabled');
+            getEl('music_pause').removeAttribute('disabled');
+            getEl('music_stop').removeAttribute('disabled');
+        });
+        benzAudioEngine.load('res/jump.mp3', function () {
+            getEl('jump').removeAttribute('disabled');
+        });
+        benzAudioEngine.load('res/gold.mp3', function () {
+            getEl('gold').removeAttribute('disabled');
+        });
+        benzAudioEngine.load('res/kick.mp3', function () {
+            getEl('kick').removeAttribute('disabled');
+        });
+
+        // play / resume the looped music, loop from 2.40 sec. to 88.80 sec.
+        var marioID = 0;
+        getEl('music_play').onclick = function () {
+            if (marioID) {
+                benzAudioEngine.resume(marioID);
+            } else {
+                marioID = benzAudioEngine.play('res/mario.mp3', 2.40, 88.80);
+            }
+        };
+
+        // pause the music
+        getEl('music_pause').onclick = function () {
+            benzAudioEngine.pause(marioID);
+        };
+
+        // stop the music
+        getEl('music_stop').onclick = function () {
+            benzAudioEngine.stop(marioID);
+            marioID = 0;
+        };
+
+        // play the sound effects
+        getEl('jump').onclick = function () {
+            benzAudioEngine.play('res/jump.mp3');
+        };
+        getEl('gold').onclick = function () {
+            benzAudioEngine.play('res/gold.mp3');
+        };
+        getEl('kick').onclick = function () {
+            benzAudioEngine.play('res/kick.mp3');
+        };
+    })();
+</script>
+</body>
+</html>
