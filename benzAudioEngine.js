@@ -3,7 +3,7 @@
  * @author BenzLeung(https://github.com/BenzLeung)
  * @date 2017/3/9
  * @license MIT
- * @version 0.0.6
+ * @version 0.0.7
  * @class benzAudioEngine
  * Created by JetBrains PhpStorm.
  *
@@ -140,16 +140,19 @@
                 paused = false;
                 source = createNode();
                 startTime = ctx.currentTime - playedTime;
+                console.log('startTime: ' + startTime);
+                console.log('playedTime: ' + playedTime);
                 if (source.start)
-                    source.start(playedTime);
+                    source.start(0, playedTime);
                 else if (source['noteGrainOn'])
-                    source['noteGrainOn'](playedTime);
+                    source['noteGrainOn'](0, playedTime);
                 else
-                    source['noteOn'](playedTime);
+                    source['noteOn'](0, playedTime);
                 return id;
             };
             this.pause = function () {
                 playedTime = ctx.currentTime - startTime;
+                console.log('playedTime: ' + playedTime);
                 paused = true;
                 if (source) {
                     source.stop();
