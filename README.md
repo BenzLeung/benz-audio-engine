@@ -59,7 +59,7 @@ benzAudioEngine.play('path/to/audio-file.mp3');
 
 ## API
 
-(**Tips:** English Version **BELOW**)
+(**Tips:** English Version in the **NEXT SECTION**)
 
 ```javascript
 /**
