@@ -3,7 +3,7 @@
  * @author BenzLeung(https://github.com/BenzLeung)
  * @date 2017/3/9
  * @license MIT
- * @version 0.0.5
+ * @version 0.0.6
  * @class benzAudioEngine
  * Created by JetBrains PhpStorm.
  *
@@ -115,12 +115,18 @@
             }
             audioList[id] = this;
 
+            var startTime = 0;
+            var playedTime = 0;
+            var paused = false;
+            var source;
             var createNode = function () {
                 var s = ctx['createBufferSource']();
                 s.buffer = buffer;
                 s['connect'](desNode);
                 s['onended'] = function () {
-                    release();
+                    if (!paused) {
+                        release();
+                    }
                 };
                 if (loopEnd) {
                     s['loop'] = true;
@@ -130,10 +136,8 @@
                 return s;
             };
 
-            var startTime = 0;
-            var playedTime = 0;
-            var source;
             this.play = function () {
+                paused = false;
                 source = createNode();
                 startTime = ctx.currentTime - playedTime;
                 if (source.start)
@@ -146,15 +150,16 @@
             };
             this.pause = function () {
                 playedTime = ctx.currentTime - startTime;
+                paused = true;
                 if (source) {
                     source.stop();
                 }
             };
             this.stop = function () {
+                paused = false;
                 if (source) {
                     source.stop();
                 }
-                release();
             };
         };
         benzAudioEngine = {
