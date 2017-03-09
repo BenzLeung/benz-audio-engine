@@ -3,7 +3,7 @@
  * @author BenzLeung(https://github.com/BenzLeung)
  * @date 2017/3/9
  * @license MIT
- * @version 0.0.3
+ * @version 0.0.4
  * @class benzAudioEngine
  * Created by JetBrains PhpStorm.
  *
@@ -146,10 +146,14 @@
             };
             this.pause = function () {
                 playedTime = ctx.currentTime - startTime;
-                source.stop();
+                if (source) {
+                    source.stop();
+                }
             };
             this.stop = function () {
-                source.stop();
+                if (source) {
+                    source.stop();
+                }
                 release();
             };
         };
@@ -226,6 +230,16 @@
             pause: function (id) {
                 if (audioList[id]) {
                     audioList[id].pause();
+                }
+            },
+
+            /**
+             * 继续播放某个音频
+             * @param {int} id 已经暂停的音频的ID
+             */
+            resume: function (id) {
+                if (audioList[id]) {
+                    audioList[id].play();
                 }
             },
 
