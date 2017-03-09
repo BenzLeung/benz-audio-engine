@@ -3,7 +3,7 @@
  * @author BenzLeung(https://github.com/BenzLeung)
  * @date 2017/3/9
  * @license MIT
- * @version 0.0.7
+ * @version 0.0.8
  * @class benzAudioEngine
  * Created by JetBrains PhpStorm.
  *
@@ -137,6 +137,7 @@
             };
 
             this.play = function () {
+                if (!paused) {return id;}
                 paused = false;
                 source = createNode();
                 startTime = ctx.currentTime - playedTime;
