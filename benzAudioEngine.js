@@ -1,7 +1,9 @@
 /**
  * @file 一个简单的声音引擎，基于 Web Audio API
  * @author BenzLeung(https://github.com/BenzLeung)
- * @date 2017/3/1
+ * @date 2017/3/9
+ * @license MIT
+ * @version 0.0.3
  * @class benzAudioEngine
  * Created by JetBrains PhpStorm.
  *

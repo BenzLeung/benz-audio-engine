@@ -1,0 +1,22 @@
+{
+  "name": "benz-audio-engine",
+  "version": "0.0.3",
+  "author": "Benz Leung",
+  "description": "一个简单的基于 Web Audio API 的音效引擎",
+  "keywords": [
+    "web audio api"
+  ],
+  "homepage": "https://github.com/BenzLeung/benz-audio-engine",
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-bump": "^2.7.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-replace": "^0.5.4",
+    "gulp-uglify": "^2.0.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BenzLeung/benz-audio-engine.git"
+  },
+  "license": "MIT"
+}
