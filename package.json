@@ -1,6 +1,6 @@
 {
   "name": "benz-audio-engine",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "author": "Benz Leung",
   "description": "一个简单的基于 Web Audio API 的音效引擎",
   "keywords": [

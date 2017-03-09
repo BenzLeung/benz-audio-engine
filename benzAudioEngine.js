@@ -3,7 +3,7 @@
  * @author BenzLeung(https://github.com/BenzLeung)
  * @date 2017/3/9
  * @license MIT
- * @version 0.0.9
+ * @version 0.0.10
  * @class benzAudioEngine
  * Created by JetBrains PhpStorm.
  *
@@ -141,8 +141,6 @@
                 paused = false;
                 source = createNode();
                 startTime = ctx.currentTime - playedTime;
-                console.log('startTime: ' + startTime);
-                console.log('playedTime: ' + playedTime);
                 if (source.start)
                     source.start(0, playedTime);
                 else if (source['noteGrainOn'])
@@ -153,7 +151,6 @@
             };
             this.pause = function () {
                 playedTime = ctx.currentTime - startTime;
-                console.log('playedTime: ' + playedTime);
                 paused = true;
                 if (source) {
                     source.stop();
