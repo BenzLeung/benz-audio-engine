@@ -8,11 +8,19 @@
   ],
   "homepage": "https://github.com/BenzLeung/benz-audio-engine",
   "devDependencies": {
+    "babel-cli": "^6.24.0",
+    "babel-plugin-external-helpers": "^6.22.0",
+    "babel-preset-es2015": "^6.24.0",
     "gulp": "^3.9.1",
     "gulp-bump": "^2.7.0",
     "gulp-rename": "^1.2.2",
     "gulp-replace": "^0.5.4",
-    "gulp-uglify": "^2.0.1"
+    "gulp-rollup": "^2.11.0",
+    "gulp-uglify": "^2.0.1",
+    "rollup-plugin-babel": "^2.7.1"
+  },
+  "dependencies": {
+    "babel-polyfill": "^6.23.0"
   },
   "repository": {
     "type": "git",

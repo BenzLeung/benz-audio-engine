@@ -13,6 +13,25 @@ var uglify = require('gulp-uglify');
 var rename = require('gulp-rename');
 var replace = require('gulp-replace');
 var bump = require('gulp-bump');
+var rollup = require('gulp-rollup');
+
+gulp.task('roll', function () {
+    gulp.src(['./es6/*.js'])
+        .pipe(rollup({
+            "format": "iife",
+            "plugins": [
+                require("rollup-plugin-babel")({
+                    "presets": [["es2015", { "modules": false }]],
+                    "babelrc": false,
+                    "plugins": ["external-helpers"]
+                })
+            ],
+            "moduleName": "benzAudioEngine",
+            entry: './es6/benzAudioEngine-es6.js'
+        }))
+        .pipe(rename('benzAudioEngine-es6-to-es5.js'))
+        .pipe(gulp.dest('.'));
+});
 
 gulp.task('uglify', function () {
     gulp.src('benzAudioEngine.js')
