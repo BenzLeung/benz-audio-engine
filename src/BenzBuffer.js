@@ -18,7 +18,7 @@ class BenzBuffer {
             return inCache;
         }
         this._src = src;
-        this._buffer = ctx['createBuffer']();
+        this._buffer = ctx['createBuffer'](1, 1, 11025);
         this._isLoaded = false;
         this._onLoadFuncQueue = [];
         bufferCache.save(src, this);
@@ -40,7 +40,7 @@ class BenzBuffer {
                     }
                 }
                 this._onLoadFuncQueue = [];
-            }, function(){
+            }.bind(this), function(){
                 //decode fail
                 this._isLoaded = true;
                 for (let i = 0, len = this._onLoadFuncQueue.length; i < len; i ++) {
@@ -50,7 +50,7 @@ class BenzBuffer {
                     }
                 }
                 this._onLoadFuncQueue = [];
-            });
+            }.bind(this));
         }.bind(this);
         request.send();
     }

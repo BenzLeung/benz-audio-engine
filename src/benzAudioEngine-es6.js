@@ -2,6 +2,8 @@
  * @file 一个简单的声音引擎，基于 Web Audio API，es6版本
  * @author BenzLeung(https://github.com/BenzLeung)
  * @date 2017/3/30
+ * @license MIT
+ * @version 0.2.3
  * Created by JetBrains PhpStorm.
  *
  * 每位工程师都有保持代码优雅的义务

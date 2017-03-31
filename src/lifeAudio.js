@@ -10,7 +10,7 @@
 
 let nextId = 1;
 let idRecycled = [];
-let audioMap = new Map();
+let audioMap = {};
 
 function allocId() {
     if (idRecycled.length) {
@@ -30,15 +30,15 @@ function save(audioObject) {
 }
 
 function load(id) {
-    if (audioMap.has(id)) {
-        return audioMap.get(id);
+    if (audioMap.hasOwnProperty(id)) {
+        return audioMap[id];
     }
     return null;
 }
 
 function release(id) {
-    if (audioMap.has(id)) {
-        audioMap.delete(id);
+    if (audioMap.hasOwnProperty(id)) {
+        delete audioMap[id];
         recycledId(id);
     }
 }

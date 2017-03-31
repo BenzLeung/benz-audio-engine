@@ -15,8 +15,18 @@ var replace = require('gulp-replace');
 var bump = require('gulp-bump');
 var rollup = require('gulp-rollup');
 
+gulp.task('roll-es6', function () {
+    gulp.src(['./src/*.js'])
+        .pipe(rollup({
+            "format": "es",
+            entry: './src/benzAudioEngine-es6.js'
+        }))
+        .pipe(rename('benzAudioEngine-es6.js'))
+        .pipe(gulp.dest('.'));
+});
+
 gulp.task('roll', function () {
-    gulp.src(['./es6/*.js'])
+    gulp.src(['./src/*.js'])
         .pipe(rollup({
             "format": "iife",
             "plugins": [
@@ -27,25 +37,32 @@ gulp.task('roll', function () {
                 })
             ],
             "moduleName": "benzAudioEngine",
-            entry: './es6/benzAudioEngine-es6.js'
+            entry: './src/benzAudioEngine-es6.js'
         }))
-        .pipe(rename('benzAudioEngine-es6-to-es5.js'))
+        .pipe(rename('benzAudioEngine.js'))
         .pipe(gulp.dest('.'));
 });
 
-gulp.task('uglify', function () {
+gulp.task('roll-uglify', ['roll'], function () {
     gulp.src('benzAudioEngine.js')
         .pipe(uglify())
         .pipe(rename('benzAudioEngine.min.js'))
         .pipe(gulp.dest('.'));
 });
 
+gulp.task('old-uglify', function () {
+    gulp.src('./old-ver/benzAudioEngine.js')
+        .pipe(uglify())
+        .pipe(rename('benzAudioEngine.min.js'))
+        .pipe(gulp.dest('./old-ver'));
+});
+
 gulp.task('bump', function () {
     var date = new Date();
-    gulp.src(['package.json', 'benzAudioEngine.js'])
+    gulp.src(['package.json', 'benzAudioEngine.js', 'src/benzAudioEngine-es6.js'])
         .pipe(bump())
         .pipe(replace(/@date ([0-9\/]+)/, '@date ' + date.getFullYear() + '/' + (date.getMonth() + 1) + '/' + date.getDate()))
         .pipe(gulp.dest('.'));
 });
 
-gulp.task('default', ['uglify', 'bump']);
+gulp.task('default', ['roll-es6', 'roll-uglify', 'bump']);
