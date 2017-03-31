@@ -12,17 +12,19 @@ import ctx from './audioContext';
 import bufferCache from './bufferCache';
 
 class BenzBuffer {
-    constructor(src) {
+    constructor(src, buffer) {
         let inCache = bufferCache.load(src);
         if (inCache) {
             return inCache;
         }
         this._src = src;
-        this._buffer = ctx['createBuffer'](1, 1, 11025);
-        this._isLoaded = false;
+        this._buffer = buffer || ctx['createBuffer'](1, 1, 22050);
+        this._isLoaded = !!buffer;
         this._onLoadFuncQueue = [];
         bufferCache.save(src, this);
-        this._load();
+        if (!this._isLoaded) {
+            this._load();
+        }
     }
 
     _load() {
@@ -68,6 +70,36 @@ class BenzBuffer {
 
     getBuffer() {
         return this._buffer;
+    }
+
+    createSprite(startTime, endTime, customName) {
+        let name = customName || '';
+        if (!name) {
+            let i = 1;
+            while (bufferCache.load(`${this._src}\$${i}`)) {
+                i ++;
+            }
+            name = `${this._src}\$${i}`;
+        }
+
+        let sampleRate = this._buffer['sampleRate'];
+        let startSample = Math.floor(sampleRate * startTime);
+        let endSample = Math.ceil(sampleRate * endTime);
+        let numberOfChannels = this._buffer['numberOfChannels'];
+
+        let spriteBuffer = ctx['createBuffer'](numberOfChannels, endSample - startSample, sampleRate);
+        this.onload(function () {
+            for (let c = 0; c < numberOfChannels; c ++) {
+                let target = spriteBuffer['getChannelData'](c);
+                let source = this._buffer['getChannelData'](c);
+                for (let s = startSample, t = 0; s < endSample; s ++, t ++) {
+                    target[t] = source[s];
+                }
+            }
+        }.bind(this));
+
+        new BenzBuffer(name, spriteBuffer);
+        return name;
     }
 }
 

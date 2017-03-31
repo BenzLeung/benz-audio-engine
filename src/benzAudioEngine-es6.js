@@ -21,6 +21,7 @@ let benzAudioEngine = {
     support: () => false,
     load: emptyFunc,
     unload: emptyFunc,
+    sprite: emptyFunc,
     play: emptyFunc,
     pause: emptyFunc,
     stop: emptyFunc,
@@ -74,6 +75,34 @@ if (ctx) {
             }
             for (let s of srcArray) {
                 bufferCache.release(s);
+            }
+        },
+
+        /**
+         * 建立 Audio Sprites。也就是把某个音频的某一小片段取出来。
+         * @param {string} src 音频文件路径
+         * @param {object} spriteData 使用一个固定格式定义小片段的名字、开始时间、结束时间
+         *                 {
+         *                    '名字1' : [开始时间, 结束时间],
+         *                    '名字2' : [开始时间, 结束时间],
+         *                    ...
+         *                 }
+         * @example
+         *      benzAudioEngine.sprite('path/to/a.mp3', {
+         *         'a.mp3$1' : [0.0, 1.5],
+         *         'a.mp3$2' : [1.85, 2.63],
+         *         'feel free to name the sprite' : [3.14, 6.66]
+         *      });
+         *      benzAudioEngine.play('a.mp3$1');
+         *      benzAudioEngine.play('a.mp3$2');
+         *      benzAudioEngine.play('feel free to name the sprite');
+         */
+        sprite: function (src, spriteData) {
+            let sourceBuffer = bufferCache.load(src);
+            for (let name in spriteData) {
+                if (spriteData.hasOwnProperty(name)) {
+                    sourceBuffer.createSprite(spriteData[name][0], spriteData[name][1], name);
+                }
             }
         },
 
