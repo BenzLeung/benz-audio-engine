@@ -197,7 +197,7 @@ function recycledId(id) {
 
 function save$1(audioObject) {
     var id = allocId();
-    audioMap.set(id, audioObject);
+    audioMap[id] = audioObject;
     return id;
 }
 
@@ -237,7 +237,7 @@ var lifeAudio = {
  */
 
 var BenzBuffer = function () {
-    function BenzBuffer(src) {
+    function BenzBuffer(src, buffer) {
         classCallCheck(this, BenzBuffer);
 
         var inCache = bufferCache.load(src);
@@ -245,11 +245,13 @@ var BenzBuffer = function () {
             return inCache;
         }
         this._src = src;
-        this._buffer = ctx$1['createBuffer'](1, 1, 11025);
-        this._isLoaded = false;
+        this._buffer = buffer || ctx$1['createBuffer'](1, 1, 22050);
+        this._isLoaded = !!buffer;
         this._onLoadFuncQueue = [];
         bufferCache.save(src, this);
-        this._load();
+        if (!this._isLoaded) {
+            this._load();
+        }
     }
 
     createClass(BenzBuffer, [{
@@ -299,6 +301,37 @@ var BenzBuffer = function () {
         key: 'getBuffer',
         value: function getBuffer() {
             return this._buffer;
+        }
+    }, {
+        key: 'createSprite',
+        value: function createSprite(startTime, endTime, customName) {
+            var name = customName || '';
+            if (!name) {
+                var i = 1;
+                while (bufferCache.load(this._src + '$' + i)) {
+                    i++;
+                }
+                name = this._src + '$' + i;
+            }
+
+            this.onload(function () {
+                var sampleRate = this._buffer['sampleRate'];
+                var startSample = Math.floor(sampleRate * startTime);
+                var endSample = Math.ceil(sampleRate * endTime);
+                var numberOfChannels = this._buffer['numberOfChannels'];
+
+                var spriteBuffer = ctx$1['createBuffer'](numberOfChannels, endSample - startSample, sampleRate);
+                for (var c = 0; c < numberOfChannels; c++) {
+                    var target = spriteBuffer['getChannelData'](c);
+                    var source = this._buffer['getChannelData'](c);
+                    for (var s = startSample, t = 0; s < endSample; s++, t++) {
+                        target[t] = source[s];
+                    }
+                }
+
+                new BenzBuffer(name, spriteBuffer);
+            }.bind(this));
+            return name;
         }
     }]);
     return BenzBuffer;
@@ -419,6 +452,7 @@ var benzAudioEngine = {
     },
     load: emptyFunc,
     unload: emptyFunc,
+    sprite: emptyFunc,
     play: emptyFunc,
     pause: emptyFunc,
     stop: emptyFunc,
@@ -501,6 +535,34 @@ if (ctx$1) {
                     if (_didIteratorError) {
                         throw _iteratorError;
                     }
+                }
+            }
+        },
+
+        /**
+         * 建立 Audio Sprites。也就是把某个音频的某一小片段取出来。
+         * @param {string} src 音频文件路径
+         * @param {object} spriteData 使用一个固定格式定义小片段的名字、开始时间、结束时间
+         *                 {
+         *                    '名字1' : [开始时间, 结束时间],
+         *                    '名字2' : [开始时间, 结束时间],
+         *                    ...
+         *                 }
+         * @example
+         *      benzAudioEngine.sprite('path/to/a.mp3', {
+         *         'a.mp3$1' : [0.0, 1.5],
+         *         'a.mp3$2' : [1.85, 2.63],
+         *         'feel free to name the sprite' : [3.14, 6.66]
+         *      });
+         *      benzAudioEngine.play('a.mp3$1');
+         *      benzAudioEngine.play('a.mp3$2');
+         *      benzAudioEngine.play('feel free to name the sprite');
+         */
+        sprite: function sprite(src, spriteData) {
+            var sourceBuffer = bufferCache.load(src);
+            for (var name in spriteData) {
+                if (spriteData.hasOwnProperty(name)) {
+                    sourceBuffer.createSprite(spriteData[name][0], spriteData[name][1], name);
                 }
             }
         },

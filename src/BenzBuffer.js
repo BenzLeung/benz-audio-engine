@@ -82,13 +82,13 @@ class BenzBuffer {
             name = `${this._src}\$${i}`;
         }
 
-        let sampleRate = this._buffer['sampleRate'];
-        let startSample = Math.floor(sampleRate * startTime);
-        let endSample = Math.ceil(sampleRate * endTime);
-        let numberOfChannels = this._buffer['numberOfChannels'];
-
-        let spriteBuffer = ctx['createBuffer'](numberOfChannels, endSample - startSample, sampleRate);
         this.onload(function () {
+            let sampleRate = this._buffer['sampleRate'];
+            let startSample = Math.floor(sampleRate * startTime);
+            let endSample = Math.ceil(sampleRate * endTime);
+            let numberOfChannels = this._buffer['numberOfChannels'];
+
+            let spriteBuffer = ctx['createBuffer'](numberOfChannels, endSample - startSample, sampleRate);
             for (let c = 0; c < numberOfChannels; c ++) {
                 let target = spriteBuffer['getChannelData'](c);
                 let source = this._buffer['getChannelData'](c);
@@ -96,9 +96,9 @@ class BenzBuffer {
                     target[t] = source[s];
                 }
             }
-        }.bind(this));
 
-        new BenzBuffer(name, spriteBuffer);
+            new BenzBuffer(name, spriteBuffer);
+        }.bind(this));
         return name;
     }
 }

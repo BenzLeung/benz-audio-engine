@@ -1,332 +1,27 @@
 /**
- * @file 公共的 Web Audio API Context
- * @author BenzLeung(https://github.com/BenzLeung)
- * @date 2017/3/30
- * Created by JetBrains PhpStorm.
- *
- * 每位工程师都有保持代码优雅的义务
- * each engineer has a duty to keep the code elegant
- */
-
-const AudioContext = window.AudioContext || window.webkitAudioContext || window.mozAudioContext;
-
-let ctx = null;
-let volumeNode;
-let compressor;
-let isMuted = false;
-let volumeBeforeMuted = 1.0;
-
-/*let emptyFunc = () => {};
-ctx.setGlobalVolume = emptyFunc;
-ctx.getGlobalVolume = emptyFunc;
-ctx.setGlobalMuted = emptyFunc;
-ctx.getGlobalMuted = emptyFunc;
-ctx.desNode = null;*/
-
-if (AudioContext) {
-    ctx = new AudioContext();
-    volumeNode = ctx['createGain']();
-    compressor = ctx['createDynamicsCompressor']();
-    compressor['connect'](volumeNode);
-    volumeNode['connect'](ctx['destination']);
-    volumeNode['gain'].value = 1.0;
-    ctx.desNode = compressor;
-
-    ctx.setGlobalVolume = (vol) => {
-        if (!isMuted) {
-            volumeNode['gain'].value = vol;
-        }
-        volumeBeforeMuted = vol;
-    };
-    ctx.getGlobalVolume = () => {
-        return volumeBeforeMuted;
-    };
-    ctx.setGlobalMuted = (muted) => {
-        isMuted = muted;
-        if (muted) {
-            volumeNode['gain'].value = 0;
-        } else {
-            volumeNode['gain'].value = volumeBeforeMuted;
-        }
-    };
-    ctx.getGlobalMuted = () => {
-        return isMuted;
-    };
-}
-
-var ctx$1 = ctx;
-
-/**
- * @file 缓存已经 load 过的 buffer
- * @author BenzLeung(https://github.com/BenzLeung)
- * @date 2017/3/30
- * Created by JetBrains PhpStorm.
- *
- * 每位工程师都有保持代码优雅的义务
- * each engineer has a duty to keep the code elegant
- */
-
-let resList = {};
-
-function save(src, bufferObject) {
-    if (bufferObject) {
-        resList[src] = bufferObject;
-    }
-}
-
-function load(src) {
-    if (resList.hasOwnProperty(src)) {
-        return resList[src];
-    }
-    return null;
-}
-
-function release(src) {
-    if (resList.hasOwnProperty(src)) {
-        delete resList[src];
-    }
-}
-
-var bufferCache = {
-    save: save,
-    load: load,
-    release: release
-};
-
-/**
- * @file 存储正在播放的音频，并分配id
- * @author BenzLeung(https://github.com/BenzLeung)
- * @date 2017/3/30
- * Created by JetBrains PhpStorm.
- *
- * 每位工程师都有保持代码优雅的义务
- * each engineer has a duty to keep the code elegant
- */
-
-let nextId = 1;
-let idRecycled = [];
-let audioMap = {};
-
-function allocId() {
-    if (idRecycled.length) {
-        return idRecycled.shift();
-    }
-    return nextId ++;
-}
-
-function recycledId(id) {
-    idRecycled.push(id);
-}
-
-function save$1(audioObject) {
-    let id = allocId();
-    audioMap.set(id, audioObject);
-    return id;
-}
-
-function load$1(id) {
-    if (audioMap.hasOwnProperty(id)) {
-        return audioMap[id];
-    }
-    return null;
-}
-
-function release$1(id) {
-    if (audioMap.hasOwnProperty(id)) {
-        delete audioMap[id];
-        recycledId(id);
-    }
-}
-
-function getAll() {
-    return [...audioMap.values()];
-}
-
-var lifeAudio = {
-    save: save$1,
-    load: load$1,
-    release: release$1,
-    getAll: getAll
-};
-
-/**
- * @file 加载音频文件并缓存
- * @author BenzLeung(https://github.com/BenzLeung)
- * @date 2017/3/30
- * Created by JetBrains PhpStorm.
- *
- * 每位工程师都有保持代码优雅的义务
- * each engineer has a duty to keep the code elegant
- */
-
-class BenzBuffer {
-    constructor(src) {
-        let inCache = bufferCache.load(src);
-        if (inCache) {
-            return inCache;
-        }
-        this._src = src;
-        this._buffer = ctx$1['createBuffer'](1, 1, 11025);
-        this._isLoaded = false;
-        this._onLoadFuncQueue = [];
-        bufferCache.save(src, this);
-        this._load();
-    }
-
-    _load() {
-        const request = new XMLHttpRequest();
-        request.open('GET', this._src, true);
-        request.responseType = 'arraybuffer';
-        request.onload = function () {
-            ctx$1['decodeAudioData'](request.response, function (data) {
-                this._buffer = data;
-                this._isLoaded = true;
-                for (let i = 0, len = this._onLoadFuncQueue.length; i < len; i ++) {
-                    let cb = this._onLoadFuncQueue[i];
-                    if (typeof cb === 'function') {
-                        cb();
-                    }
-                }
-                this._onLoadFuncQueue = [];
-            }.bind(this), function(){
-                //decode fail
-                this._isLoaded = true;
-                for (let i = 0, len = this._onLoadFuncQueue.length; i < len; i ++) {
-                    let cb = this._onLoadFuncQueue[i];
-                    if (typeof cb === 'function') {
-                        cb();
-                    }
-                }
-                this._onLoadFuncQueue = [];
-            }.bind(this));
-        }.bind(this);
-        request.send();
-    }
-
-    onload(fn) {
-        if (typeof fn !== 'function') {
-            return;
-        }
-        if (this._isLoaded) {
-            fn();
-        } else {
-            this._onLoadFuncQueue.push(fn);
-        }
-    }
-
-    getBuffer() {
-        return this._buffer;
-    }
-}
-
-/**
- * @file
- * @author BenzLeung(https://github.com/BenzLeung)
- * @date 2017/3/30
- * Created by JetBrains PhpStorm.
- *
- * 每位工程师都有保持代码优雅的义务
- * each engineer has a duty to keep the code elegant
- */
-
-class BenzAudio {
-
-    constructor(src, loopStart, loopEnd) {
-        this._bufferObj = bufferCache.load(src);
-        this._id = 0;
-        this._startTime = 0;
-        this._playedTime = 0;
-        this._paused = true;
-        this._source = null;
-        this._loopStart = loopStart;
-        this._loopEnd = loopEnd;
-        if (this._bufferObj) {
-            this._id = lifeAudio.save(this);
-        }
-    }
-
-    _createNode() {
-        if (!this._bufferObj) {
-            return;
-        }
-        let buffer = this._bufferObj.getBuffer();
-        if (!buffer) {
-            return;
-        }
-        let s = ctx$1['createBufferSource']();
-        s['buffer'] = buffer;
-        s['connect'](ctx$1.desNode);
-        s['onended'] = () => {
-            if (!this._paused) {
-                lifeAudio.release(this._id);
-            }
-        };
-        if (this._loopEnd) {
-            s['loop'] = true;
-            s['loopStart'] = this._loopStart;
-            s['loopEnd'] = this._loopEnd;
-        }
-        this._source = s;
-    }
-
-    play() {
-        if (this._source && !this._paused) {
-            return this._id;
-        }
-        this._paused = false;
-        this._createNode();
-        if (!this._source) {
-            return 0;
-        }
-        this._startTime = ctx$1.currentTime - this._playedTime;
-        if (this._source.start)
-            this._source.start(0, this._playedTime);
-        else if (this._source['noteGrainOn'])
-            this._source['noteGrainOn'](0, this._playedTime);
-        else
-            this._source['noteOn'](0, this._playedTime);
-        return this._id;
-    }
-
-    pause() {
-        this._playedTime = ctx$1.currentTime - this._startTime;
-        this._paused = true;
-        if (this._loopEnd) {
-            while (this._playedTime >= this._loopEnd) {
-                this._playedTime -= (this._loopEnd - this._loopStart);
-            }
-        }
-        if (this._source) {
-            this._source.stop();
-        }
-    }
-
-    stop() {
-        this._paused = false;
-        if (this._source) {
-            this._source.stop();
-        }
-        lifeAudio.release(this._id);
-    }
-}
-
-/**
  * @file 一个简单的声音引擎，基于 Web Audio API，es6版本
  * @author BenzLeung(https://github.com/BenzLeung)
- * @date 2017/3/30
+ * @date 2017/3/31
  * @license MIT
- * @version 0.2.3
+ * @version 0.2.4
  * Created by JetBrains PhpStorm.
  *
  * 每位工程师都有保持代码优雅的义务
  * each engineer has a duty to keep the code elegant
  */
+
+import ctx from './audioContext';
+import bufferCache from './bufferCache';
+import lifeAudio from './lifeAudio';
+import BenzBuffer from './BenzBuffer';
+import BenzAudio from './BenzAudio';
 
 const emptyFunc = () => {};
 let benzAudioEngine = {
     support: () => false,
     load: emptyFunc,
     unload: emptyFunc,
+    sprite: emptyFunc,
     play: emptyFunc,
     pause: emptyFunc,
     stop: emptyFunc,
@@ -337,7 +32,7 @@ let benzAudioEngine = {
     stopAll: emptyFunc
 };
 
-if (ctx$1) {
+if (ctx) {
     benzAudioEngine = {
 
         /**
@@ -380,6 +75,34 @@ if (ctx$1) {
             }
             for (let s of srcArray) {
                 bufferCache.release(s);
+            }
+        },
+
+        /**
+         * 建立 Audio Sprites。也就是把某个音频的某一小片段取出来。
+         * @param {string} src 音频文件路径
+         * @param {object} spriteData 使用一个固定格式定义小片段的名字、开始时间、结束时间
+         *                 {
+         *                    '名字1' : [开始时间, 结束时间],
+         *                    '名字2' : [开始时间, 结束时间],
+         *                    ...
+         *                 }
+         * @example
+         *      benzAudioEngine.sprite('path/to/a.mp3', {
+         *         'a.mp3$1' : [0.0, 1.5],
+         *         'a.mp3$2' : [1.85, 2.63],
+         *         'feel free to name the sprite' : [3.14, 6.66]
+         *      });
+         *      benzAudioEngine.play('a.mp3$1');
+         *      benzAudioEngine.play('a.mp3$2');
+         *      benzAudioEngine.play('feel free to name the sprite');
+         */
+        sprite: function (src, spriteData) {
+            let sourceBuffer = bufferCache.load(src);
+            for (let name in spriteData) {
+                if (spriteData.hasOwnProperty(name)) {
+                    sourceBuffer.createSprite(spriteData[name][0], spriteData[name][1], name);
+                }
             }
         },
 
@@ -435,7 +158,7 @@ if (ctx$1) {
          * @param {number} vol 音量值，范围是 0.0 - 1.0
          */
         setVolume: function (vol) {
-            ctx$1.setGlobalVolume(vol);
+            ctx.setGlobalVolume(vol);
         },
 
         /**
@@ -443,7 +166,7 @@ if (ctx$1) {
          * @return {number} 音量，0.0 - 1.0
          */
         getVolume: function () {
-            return ctx$1.getGlobalVolume();
+            return ctx.getGlobalVolume();
         },
 
         /**
@@ -451,7 +174,7 @@ if (ctx$1) {
          * @param {boolean} muted 是否静音，true 为静音， false 为不静音
          */
         setMuted: function (muted) {
-            ctx$1.setGlobalMuted(muted);
+            ctx.setGlobalMuted(muted);
         },
 
         /**
@@ -459,7 +182,7 @@ if (ctx$1) {
          * @return {boolean}
          */
         getMuted: function () {
-            return ctx$1.getGlobalMuted();
+            return ctx.getGlobalMuted();
         },
 
         /**
@@ -488,6 +211,4 @@ if (ctx$1) {
     };
 }
 
-var benzAudioEngine$1 = benzAudioEngine;
-
-export default benzAudioEngine$1;
+export default benzAudioEngine;

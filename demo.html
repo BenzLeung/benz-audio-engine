@@ -27,9 +27,10 @@
     <input type="button" id="jump" disabled value="跳！"/>
     <input type="button" id="gold" disabled value="金币！"/>
     <input type="button" id="kick" disabled value="踩！"/>
+    <input type="button" id="sprite" disabled value="一小段sprite"/>
 </p>
 
-<script src="benzAudioEngine-es6-to-es5.js"></script>
+<script src="benzAudioEngine.js"></script>
 <script>
     (function () {
         var getEl = function (id) {
@@ -52,6 +53,7 @@
             getEl('music_play').removeAttribute('disabled');
             getEl('music_pause').removeAttribute('disabled');
             getEl('music_stop').removeAttribute('disabled');
+            getEl('sprite').removeAttribute('disabled');
         });
         benzAudioEngine.load('res/jump.mp3', function () {
             getEl('jump').removeAttribute('disabled');
@@ -61,6 +63,9 @@
         });
         benzAudioEngine.load('res/kick.mp3', function () {
             getEl('kick').removeAttribute('disabled');
+        });
+        benzAudioEngine.sprite('res/mario.mp3', {
+            'a sprite' : [2.0, 6.0]
         });
 
         // 播放/继续播放循环音乐，循环从2.40秒到88.80秒
@@ -93,6 +98,9 @@
         };
         getEl('kick').onclick = function () {
             benzAudioEngine.play('res/kick.mp3');
+        };
+        getEl('sprite').onclick = function () {
+            benzAudioEngine.play('a sprite');
         };
     })();
 </script>

@@ -25,7 +25,7 @@ function recycledId(id) {
 
 function save(audioObject) {
     let id = allocId();
-    audioMap.set(id, audioObject);
+    audioMap[id] = audioObject;
     return id;
 }
 
