@@ -2,11 +2,15 @@
 
 这是一个简单的基于 Web Audio API 的音效引擎。
 
-我开发这个音效引擎是因为我觉得 cocos2d-js 的音效引擎不好用，cocos2d-js 在移动端无法预先加载音频资源。
+我开发这个音效引擎是因为我觉得 cocos2d-js 的音效引擎不好用。cocos2d-js 在移动端无法预先加载音频资源，不支持 sprite，也不支持循环节。
+
+**2017/04/01 更新：** 现在支持 sprite 了，可以取出音频的其中一小段来播放。
 
 This is a simple audio engine that base on Web Audio API.
 
-I developed it because I think cocos2d-js sound engine is not easy to use. Cocos2d-js can not preload audio resources on the mobile side.
+I developed it because I think cocos2d-js sound engine is not convenient to use. Cocos2d-js can not preload audio resources on the mobile side.
+
+**2017/04/01 Update:** Now support "Audio Sprite"! You can slice a piece of audio to play.
 
 ## Demo
 
@@ -75,6 +79,30 @@ var isSupport = benzAudioEngine.support();
  * @param {function} [callback] 所有音频文件加载完毕后的回调
  */
 benzAudioEngine.load(srcArray, callback);
+```
+```javascript
+/**
+ * 建立 Audio Sprites。也就是把某个音频的某一小片段取出来。
+ * @param {string} src 音频文件路径
+ * @param {object} spriteData 使用一个固定格式定义小片段的名字、开始时间、结束时间
+ *                 {
+ *                    '名字1' : [开始时间, 结束时间],
+ *                    '名字2' : [开始时间, 结束时间],
+ *                    ...
+ *                 }
+ */
+benzAudioEngine.sprite(src, spriteData);
+
+// 示例：
+benzAudioEngine.sprite('path/to/a.mp3', {
+    'a.mp3$1' : [0.0, 1.5],
+    'a.mp3$2' : [1.85, 2.63],
+    'feel free to name the sprite' : [3.14, 6.66]
+});
+benzAudioEngine.play('a.mp3$1');
+benzAudioEngine.play('a.mp3$2');
+// 同样支持循环节
+benzAudioEngine.play('feel free to name the sprite', 0.1, 3.1);
 ```
 ```javascript
 /**
@@ -174,6 +202,31 @@ var isSupport = benzAudioEngine.support();
  * @param {function} [callback] - A callback when all files are loaded
  */
 benzAudioEngine.load(srcArray, callback);
+```
+```javascript
+/**
+ * Create Audio Sprites. That is, a small piece of audio to take out.
+ * @param {string} src - Path to audio file.
+ * @param {object} spriteData - Use a fixed format to define the name,
+ *                              the start time, and the end time of the sprite
+ *                 {
+ *                    'spriteName1' : [startTime, endTime],
+ *                    'spriteName2' : [startTime, endTime],
+ *                    ...
+ *                 }
+ */
+benzAudioEngine.sprite(src, spriteData);
+
+// 示例：
+benzAudioEngine.sprite('path/to/a.mp3', {
+    'a.mp3$1' : [0.0, 1.5],
+    'a.mp3$2' : [1.85, 2.63],
+    'feel free to name the sprite' : [3.14, 6.66]
+});
+benzAudioEngine.play('a.mp3$1');
+benzAudioEngine.play('a.mp3$2');
+// also supported loop
+benzAudioEngine.play('feel free to name the sprite', 0.1, 3.1);
 ```
 ```javascript
 /**

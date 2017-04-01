@@ -27,6 +27,7 @@
     <input type="button" id="jump" disabled value="Jump!"/>
     <input type="button" id="gold" disabled value="Gold!"/>
     <input type="button" id="kick" disabled value="Kick!"/>
+    <input type="button" id="sprite" disabled value="A little sprite"/>
 </p>
 
 <script src="benzAudioEngine.js"></script>
@@ -62,6 +63,9 @@
         benzAudioEngine.load('res/kick.mp3', function () {
             getEl('kick').removeAttribute('disabled');
         });
+        benzAudioEngine.sprite('res/mario.mp3', {
+            'a sprite' : [2.0, 6.0]
+        });
 
         // play / resume the looped music, loop from 2.40 sec. to 88.80 sec.
         var marioID = 0;
@@ -93,6 +97,9 @@
         };
         getEl('kick').onclick = function () {
             benzAudioEngine.play('res/kick.mp3');
+        };
+        getEl('sprite').onclick = function () {
+            benzAudioEngine.play('a sprite');
         };
     })();
 </script>
