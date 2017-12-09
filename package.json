@@ -3,13 +3,14 @@
   "version": "0.2.10",
   "author": "Benz Leung",
   "description": "一个简单的基于 Web Audio API 的音效引擎",
+  "main": "src/benzAudioEngine.js",
   "keywords": [
     "web audio api"
   ],
   "scripts": {
-    "uglify": "uglifyjs \"./benzAudioEngine.js\" -o \"./benzAudioEngine.min.js\"",
-    "browserify": "browserify \"./src/\" > \"./benzAudioEngine.js\" -t [ babelify --presets [ env ] ] -s benzAudioEngine",
-    "build": "npm run browserify && npm run uglify"
+    "build-uglify": "uglifyjs \"./benzAudioEngine.js\" -o \"./benzAudioEngine.min.js\"",
+    "build-browserify": "browserify \"./src/\" > \"./benzAudioEngine.js\" -t [ babelify --presets [ env ] ] -s benzAudioEngine",
+    "build": "npm run build-browserify && npm run build-uglify"
   },
   "homepage": "https://github.com/BenzLeung/benz-audio-engine",
   "devDependencies": {
