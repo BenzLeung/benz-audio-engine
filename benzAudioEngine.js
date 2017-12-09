@@ -1,6 +1,264 @@
-var benzAudioEngine = (function () {
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.benzAudioEngine = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
 
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /**
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * @file
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * @author BenzLeung(https://github.com/BenzLeung)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * @date 2017/3/30
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * Created by JetBrains PhpStorm.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      *
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * 每位工程师都有保持代码优雅的义务
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * each engineer has a duty to keep the code elegant
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
+
+var _audioContext = require('./audioContext');
+
+var _audioContext2 = _interopRequireDefault(_audioContext);
+
+var _bufferCache = require('./bufferCache');
+
+var _bufferCache2 = _interopRequireDefault(_bufferCache);
+
+var _lifeAudio = require('./lifeAudio');
+
+var _lifeAudio2 = _interopRequireDefault(_lifeAudio);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var BenzAudio = function () {
+    function BenzAudio(src, loopStart, loopEnd) {
+        _classCallCheck(this, BenzAudio);
+
+        this._bufferObj = _bufferCache2.default.load(src);
+        this._id = 0;
+        this._startTime = 0;
+        this._playedTime = 0;
+        this._paused = true;
+        this._source = null;
+        this._loopStart = loopStart;
+        this._loopEnd = loopEnd;
+        if (this._bufferObj) {
+            this._id = _lifeAudio2.default.save(this);
+        }
+    }
+
+    _createClass(BenzAudio, [{
+        key: '_createNode',
+        value: function _createNode() {
+            var _this = this;
+
+            if (!this._bufferObj) {
+                return;
+            }
+            var buffer = this._bufferObj.getBuffer();
+            if (!buffer) {
+                return;
+            }
+            var s = _audioContext2.default['createBufferSource']();
+            s['buffer'] = buffer;
+            s['connect'](_audioContext2.default.desNode);
+            s['onended'] = function () {
+                if (!_this._paused) {
+                    _lifeAudio2.default.release(_this._id);
+                }
+            };
+            if (this._loopEnd) {
+                s['loop'] = true;
+                s['loopStart'] = this._loopStart;
+                s['loopEnd'] = this._loopEnd;
+            }
+            this._source = s;
+        }
+    }, {
+        key: 'play',
+        value: function play() {
+            if (this._source && !this._paused) {
+                return this._id;
+            }
+            this._paused = false;
+            this._createNode();
+            if (!this._source) {
+                return 0;
+            }
+            this._startTime = _audioContext2.default.currentTime - this._playedTime;
+            if (this._source.start) this._source.start(0, this._playedTime);else if (this._source['noteGrainOn']) this._source['noteGrainOn'](0, this._playedTime);else this._source['noteOn'](0, this._playedTime);
+            return this._id;
+        }
+    }, {
+        key: 'pause',
+        value: function pause() {
+            this._playedTime = _audioContext2.default.currentTime - this._startTime;
+            this._paused = true;
+            if (this._loopEnd) {
+                while (this._playedTime >= this._loopEnd) {
+                    this._playedTime -= this._loopEnd - this._loopStart;
+                }
+            }
+            if (this._source) {
+                this._source.stop();
+            }
+        }
+    }, {
+        key: 'stop',
+        value: function stop() {
+            this._paused = false;
+            if (this._source) {
+                this._source.stop();
+            }
+            _lifeAudio2.default.release(this._id);
+        }
+    }]);
+
+    return BenzAudio;
+}();
+
+exports.default = BenzAudio;
+
+},{"./audioContext":3,"./bufferCache":5,"./lifeAudio":6}],2:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }(); /**
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * @file 加载音频文件并缓存
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * @author BenzLeung(https://github.com/BenzLeung)
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * @date 2017/3/30
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * Created by JetBrains PhpStorm.
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      *
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * 每位工程师都有保持代码优雅的义务
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      * each engineer has a duty to keep the code elegant
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      */
+
+var _audioContext = require('./audioContext');
+
+var _audioContext2 = _interopRequireDefault(_audioContext);
+
+var _bufferCache = require('./bufferCache');
+
+var _bufferCache2 = _interopRequireDefault(_bufferCache);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var BenzBuffer = function () {
+    function BenzBuffer(src, buffer) {
+        _classCallCheck(this, BenzBuffer);
+
+        var inCache = _bufferCache2.default.load(src);
+        if (inCache) {
+            return inCache;
+        }
+        this._src = src;
+        this._buffer = buffer || _audioContext2.default['createBuffer'](1, 1, 22050);
+        this._isLoaded = !!buffer;
+        this._onLoadFuncQueue = [];
+        _bufferCache2.default.save(src, this);
+        if (!this._isLoaded) {
+            this._load();
+        }
+    }
+
+    _createClass(BenzBuffer, [{
+        key: '_load',
+        value: function _load() {
+            var request = new XMLHttpRequest();
+            request.open('GET', this._src, true);
+            request.responseType = 'arraybuffer';
+            request.onload = function () {
+                _audioContext2.default['decodeAudioData'](request.response, function (data) {
+                    this._buffer = data;
+                    this._isLoaded = true;
+                    for (var i = 0, len = this._onLoadFuncQueue.length; i < len; i++) {
+                        var cb = this._onLoadFuncQueue[i];
+                        if (typeof cb === 'function') {
+                            cb();
+                        }
+                    }
+                    this._onLoadFuncQueue = [];
+                }.bind(this), function () {
+                    //decode fail
+                    this._isLoaded = true;
+                    for (var i = 0, len = this._onLoadFuncQueue.length; i < len; i++) {
+                        var cb = this._onLoadFuncQueue[i];
+                        if (typeof cb === 'function') {
+                            cb();
+                        }
+                    }
+                    this._onLoadFuncQueue = [];
+                }.bind(this));
+            }.bind(this);
+            request.send();
+        }
+    }, {
+        key: 'onload',
+        value: function onload(fn) {
+            if (typeof fn !== 'function') {
+                return;
+            }
+            if (this._isLoaded) {
+                fn();
+            } else {
+                this._onLoadFuncQueue.push(fn);
+            }
+        }
+    }, {
+        key: 'getBuffer',
+        value: function getBuffer() {
+            return this._buffer;
+        }
+    }, {
+        key: 'createSprite',
+        value: function createSprite(startTime, endTime, customName) {
+            var name = customName || '';
+            if (!name) {
+                var i = 1;
+                while (_bufferCache2.default.load(this._src + '$' + i)) {
+                    i++;
+                }
+                name = this._src + '$' + i;
+            }
+
+            this.onload(function () {
+                var sampleRate = this._buffer['sampleRate'];
+                var startSample = Math.floor(sampleRate * startTime);
+                var endSample = Math.ceil(sampleRate * endTime);
+                var numberOfChannels = this._buffer['numberOfChannels'];
+
+                var spriteBuffer = _audioContext2.default['createBuffer'](numberOfChannels, endSample - startSample, sampleRate);
+                for (var c = 0; c < numberOfChannels; c++) {
+                    var target = spriteBuffer['getChannelData'](c);
+                    var source = this._buffer['getChannelData'](c);
+                    for (var s = startSample, t = 0; s < endSample; s++, t++) {
+                        target[t] = source[s];
+                    }
+                }
+
+                new BenzBuffer(name, spriteBuffer);
+            }.bind(this));
+            return name;
+        }
+    }]);
+
+    return BenzBuffer;
+}();
+
+exports.default = BenzBuffer;
+
+},{"./audioContext":3,"./bufferCache":5}],3:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
 /**
  * @file 公共的 Web Audio API Context
  * @author BenzLeung(https://github.com/BenzLeung)
@@ -57,395 +315,49 @@ if (AudioContext) {
     };
 }
 
-var ctx$1 = ctx;
+exports.default = ctx;
 
-/**
- * @file 缓存已经 load 过的 buffer
- * @author BenzLeung(https://github.com/BenzLeung)
- * @date 2017/3/30
- * Created by JetBrains PhpStorm.
- *
- * 每位工程师都有保持代码优雅的义务
- * each engineer has a duty to keep the code elegant
- */
+},{}],4:[function(require,module,exports){
+'use strict';
 
-var resList = {};
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
 
-function save(src, bufferObject) {
-    if (bufferObject) {
-        resList[src] = bufferObject;
-    }
-}
+var _audioContext = require('./audioContext');
 
-function load(src) {
-    if (resList.hasOwnProperty(src)) {
-        return resList[src];
-    }
-    return null;
-}
+var _audioContext2 = _interopRequireDefault(_audioContext);
 
-function release(src) {
-    if (resList.hasOwnProperty(src)) {
-        delete resList[src];
-    }
-}
+var _bufferCache = require('./bufferCache');
 
-var bufferCache = {
-    save: save,
-    load: load,
-    release: release
-};
+var _bufferCache2 = _interopRequireDefault(_bufferCache);
 
-var classCallCheck = function (instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
-  }
-};
+var _lifeAudio = require('./lifeAudio');
 
-var createClass = function () {
-  function defineProperties(target, props) {
-    for (var i = 0; i < props.length; i++) {
-      var descriptor = props[i];
-      descriptor.enumerable = descriptor.enumerable || false;
-      descriptor.configurable = true;
-      if ("value" in descriptor) descriptor.writable = true;
-      Object.defineProperty(target, descriptor.key, descriptor);
-    }
-  }
+var _lifeAudio2 = _interopRequireDefault(_lifeAudio);
 
-  return function (Constructor, protoProps, staticProps) {
-    if (protoProps) defineProperties(Constructor.prototype, protoProps);
-    if (staticProps) defineProperties(Constructor, staticProps);
-    return Constructor;
-  };
-}();
+var _BenzBuffer = require('./BenzBuffer');
 
+var _BenzBuffer2 = _interopRequireDefault(_BenzBuffer);
 
+var _BenzAudio = require('./BenzAudio');
 
+var _BenzAudio2 = _interopRequireDefault(_BenzAudio);
 
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+var emptyFunc = function emptyFunc() {}; /**
+                                          * @file 一个简单的声音引擎，基于 Web Audio API，es6版本
+                                          * @author BenzLeung(https://github.com/BenzLeung)
+                                          * @date 2017/3/30
+                                          * @license MIT
+                                          * @version 0.2.3
+                                          * Created by JetBrains PhpStorm.
+                                          *
+                                          * 每位工程师都有保持代码优雅的义务
+                                          * each engineer has a duty to keep the code elegant
+                                          */
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-var toConsumableArray = function (arr) {
-  if (Array.isArray(arr)) {
-    for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) arr2[i] = arr[i];
-
-    return arr2;
-  } else {
-    return Array.from(arr);
-  }
-};
-
-/**
- * @file 存储正在播放的音频，并分配id
- * @author BenzLeung(https://github.com/BenzLeung)
- * @date 2017/3/30
- * Created by JetBrains PhpStorm.
- *
- * 每位工程师都有保持代码优雅的义务
- * each engineer has a duty to keep the code elegant
- */
-
-var nextId = 1;
-var idRecycled = [];
-var audioMap = {};
-
-function allocId() {
-    if (idRecycled.length) {
-        return idRecycled.shift();
-    }
-    return nextId++;
-}
-
-function recycledId(id) {
-    idRecycled.push(id);
-}
-
-function save$1(audioObject) {
-    var id = allocId();
-    audioMap[id] = audioObject;
-    return id;
-}
-
-function load$1(id) {
-    if (audioMap.hasOwnProperty(id)) {
-        return audioMap[id];
-    }
-    return null;
-}
-
-function release$1(id) {
-    if (audioMap.hasOwnProperty(id)) {
-        delete audioMap[id];
-        recycledId(id);
-    }
-}
-
-function getAll() {
-    return [].concat(toConsumableArray(audioMap.values()));
-}
-
-var lifeAudio = {
-    save: save$1,
-    load: load$1,
-    release: release$1,
-    getAll: getAll
-};
-
-/**
- * @file 加载音频文件并缓存
- * @author BenzLeung(https://github.com/BenzLeung)
- * @date 2017/3/30
- * Created by JetBrains PhpStorm.
- *
- * 每位工程师都有保持代码优雅的义务
- * each engineer has a duty to keep the code elegant
- */
-
-var BenzBuffer = function () {
-    function BenzBuffer(src, buffer) {
-        classCallCheck(this, BenzBuffer);
-
-        var inCache = bufferCache.load(src);
-        if (inCache) {
-            return inCache;
-        }
-        this._src = src;
-        this._buffer = buffer || ctx$1['createBuffer'](1, 1, 22050);
-        this._isLoaded = !!buffer;
-        this._onLoadFuncQueue = [];
-        bufferCache.save(src, this);
-        if (!this._isLoaded) {
-            this._load();
-        }
-    }
-
-    createClass(BenzBuffer, [{
-        key: '_load',
-        value: function _load() {
-            var request = new XMLHttpRequest();
-            request.open('GET', this._src, true);
-            request.responseType = 'arraybuffer';
-            request.onload = function () {
-                ctx$1['decodeAudioData'](request.response, function (data) {
-                    this._buffer = data;
-                    this._isLoaded = true;
-                    for (var i = 0, len = this._onLoadFuncQueue.length; i < len; i++) {
-                        var cb = this._onLoadFuncQueue[i];
-                        if (typeof cb === 'function') {
-                            cb();
-                        }
-                    }
-                    this._onLoadFuncQueue = [];
-                }.bind(this), function () {
-                    //decode fail
-                    this._isLoaded = true;
-                    for (var i = 0, len = this._onLoadFuncQueue.length; i < len; i++) {
-                        var cb = this._onLoadFuncQueue[i];
-                        if (typeof cb === 'function') {
-                            cb();
-                        }
-                    }
-                    this._onLoadFuncQueue = [];
-                }.bind(this));
-            }.bind(this);
-            request.send();
-        }
-    }, {
-        key: 'onload',
-        value: function onload(fn) {
-            if (typeof fn !== 'function') {
-                return;
-            }
-            if (this._isLoaded) {
-                fn();
-            } else {
-                this._onLoadFuncQueue.push(fn);
-            }
-        }
-    }, {
-        key: 'getBuffer',
-        value: function getBuffer() {
-            return this._buffer;
-        }
-    }, {
-        key: 'createSprite',
-        value: function createSprite(startTime, endTime, customName) {
-            var name = customName || '';
-            if (!name) {
-                var i = 1;
-                while (bufferCache.load(this._src + '$' + i)) {
-                    i++;
-                }
-                name = this._src + '$' + i;
-            }
-
-            this.onload(function () {
-                var sampleRate = this._buffer['sampleRate'];
-                var startSample = Math.floor(sampleRate * startTime);
-                var endSample = Math.ceil(sampleRate * endTime);
-                var numberOfChannels = this._buffer['numberOfChannels'];
-
-                var spriteBuffer = ctx$1['createBuffer'](numberOfChannels, endSample - startSample, sampleRate);
-                for (var c = 0; c < numberOfChannels; c++) {
-                    var target = spriteBuffer['getChannelData'](c);
-                    var source = this._buffer['getChannelData'](c);
-                    for (var s = startSample, t = 0; s < endSample; s++, t++) {
-                        target[t] = source[s];
-                    }
-                }
-
-                new BenzBuffer(name, spriteBuffer);
-            }.bind(this));
-            return name;
-        }
-    }]);
-    return BenzBuffer;
-}();
-
-/**
- * @file
- * @author BenzLeung(https://github.com/BenzLeung)
- * @date 2017/3/30
- * Created by JetBrains PhpStorm.
- *
- * 每位工程师都有保持代码优雅的义务
- * each engineer has a duty to keep the code elegant
- */
-
-var BenzAudio = function () {
-    function BenzAudio(src, loopStart, loopEnd) {
-        classCallCheck(this, BenzAudio);
-
-        this._bufferObj = bufferCache.load(src);
-        this._id = 0;
-        this._startTime = 0;
-        this._playedTime = 0;
-        this._paused = true;
-        this._source = null;
-        this._loopStart = loopStart;
-        this._loopEnd = loopEnd;
-        if (this._bufferObj) {
-            this._id = lifeAudio.save(this);
-        }
-    }
-
-    createClass(BenzAudio, [{
-        key: '_createNode',
-        value: function _createNode() {
-            var _this = this;
-
-            if (!this._bufferObj) {
-                return;
-            }
-            var buffer = this._bufferObj.getBuffer();
-            if (!buffer) {
-                return;
-            }
-            var s = ctx$1['createBufferSource']();
-            s['buffer'] = buffer;
-            s['connect'](ctx$1.desNode);
-            s['onended'] = function () {
-                if (!_this._paused) {
-                    lifeAudio.release(_this._id);
-                }
-            };
-            if (this._loopEnd) {
-                s['loop'] = true;
-                s['loopStart'] = this._loopStart;
-                s['loopEnd'] = this._loopEnd;
-            }
-            this._source = s;
-        }
-    }, {
-        key: 'play',
-        value: function play() {
-            if (this._source && !this._paused) {
-                return this._id;
-            }
-            this._paused = false;
-            this._createNode();
-            if (!this._source) {
-                return 0;
-            }
-            this._startTime = ctx$1.currentTime - this._playedTime;
-            if (this._source.start) this._source.start(0, this._playedTime);else if (this._source['noteGrainOn']) this._source['noteGrainOn'](0, this._playedTime);else this._source['noteOn'](0, this._playedTime);
-            return this._id;
-        }
-    }, {
-        key: 'pause',
-        value: function pause() {
-            this._playedTime = ctx$1.currentTime - this._startTime;
-            this._paused = true;
-            if (this._loopEnd) {
-                while (this._playedTime >= this._loopEnd) {
-                    this._playedTime -= this._loopEnd - this._loopStart;
-                }
-            }
-            if (this._source) {
-                this._source.stop();
-            }
-        }
-    }, {
-        key: 'stop',
-        value: function stop() {
-            this._paused = false;
-            if (this._source) {
-                this._source.stop();
-            }
-            lifeAudio.release(this._id);
-        }
-    }]);
-    return BenzAudio;
-}();
-
-/**
- * @file 一个简单的声音引擎，基于 Web Audio API，es6版本
- * @author BenzLeung(https://github.com/BenzLeung)
- * @date 2017/3/30
- * @license MIT
- * @version 0.2.3
- * Created by JetBrains PhpStorm.
- *
- * 每位工程师都有保持代码优雅的义务
- * each engineer has a duty to keep the code elegant
- */
-
-var emptyFunc = function emptyFunc() {};
 var benzAudioEngine = {
     support: function support() {
         return false;
@@ -465,7 +377,7 @@ var benzAudioEngine = {
     stopAll: emptyFunc
 };
 
-if (ctx$1) {
+if (_audioContext2.default) {
     benzAudioEngine = {
 
         /**
@@ -489,7 +401,7 @@ if (ctx$1) {
             var buf = void 0;
 
             var _loop = function _loop(i, len) {
-                buf = new BenzBuffer(srcArray[i]);
+                buf = new _BenzBuffer2.default(srcArray[i]);
                 buf.onload(function () {
                     loadedCount++;
                     if (loadedCount >= len) {
@@ -521,7 +433,7 @@ if (ctx$1) {
                 for (var _iterator = srcArray[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
                     var s = _step.value;
 
-                    bufferCache.release(s);
+                    _bufferCache2.default.release(s);
                 }
             } catch (err) {
                 _didIteratorError = true;
@@ -559,7 +471,7 @@ if (ctx$1) {
          *      benzAudioEngine.play('feel free to name the sprite');
          */
         sprite: function sprite(src, spriteData) {
-            var sourceBuffer = bufferCache.load(src);
+            var sourceBuffer = _bufferCache2.default.load(src);
             for (var name in spriteData) {
                 if (spriteData.hasOwnProperty(name)) {
                     sourceBuffer.createSprite(spriteData[name][0], spriteData[name][1], name);
@@ -577,7 +489,7 @@ if (ctx$1) {
          *               则不需要理会这个返回值（不设置循环的话，音频播放完毕会自动停止）
          */
         play: function play(src, loopStart, loopEnd) {
-            var a = new BenzAudio(src, loopStart, loopEnd);
+            var a = new _BenzAudio2.default(src, loopStart, loopEnd);
             return a.play();
         },
 
@@ -587,7 +499,7 @@ if (ctx$1) {
          * @param {int} id 要暂停的音频的ID
          */
         pause: function pause(id) {
-            var a = lifeAudio.load(id);
+            var a = _lifeAudio2.default.load(id);
             if (a) {
                 a.pause();
             }
@@ -599,7 +511,7 @@ if (ctx$1) {
          * @param {int} id 已经暂停的音频的ID
          */
         resume: function resume(id) {
-            var a = lifeAudio.load(id);
+            var a = _lifeAudio2.default.load(id);
             if (a) {
                 a.play();
             }
@@ -611,7 +523,7 @@ if (ctx$1) {
          * @param {int} id 要暂停的音频的ID
          */
         stop: function stop(id) {
-            var a = lifeAudio.load(id);
+            var a = _lifeAudio2.default.load(id);
             if (a) {
                 a.stop();
             }
@@ -623,7 +535,7 @@ if (ctx$1) {
          * @param {number} vol 音量值，范围是 0.0 - 1.0
          */
         setVolume: function setVolume(vol) {
-            ctx$1.setGlobalVolume(vol);
+            _audioContext2.default.setGlobalVolume(vol);
         },
 
         /**
@@ -631,7 +543,7 @@ if (ctx$1) {
          * @return {number} 音量，0.0 - 1.0
          */
         getVolume: function getVolume() {
-            return ctx$1.getGlobalVolume();
+            return _audioContext2.default.getGlobalVolume();
         },
 
         /**
@@ -639,7 +551,7 @@ if (ctx$1) {
          * @param {boolean} muted 是否静音，true 为静音， false 为不静音
          */
         setMuted: function setMuted(muted) {
-            ctx$1.setGlobalMuted(muted);
+            _audioContext2.default.setGlobalMuted(muted);
         },
 
         /**
@@ -647,14 +559,14 @@ if (ctx$1) {
          * @return {boolean}
          */
         getMuted: function getMuted() {
-            return ctx$1.getGlobalMuted();
+            return _audioContext2.default.getGlobalMuted();
         },
 
         /**
          * 暂停所有音频
          */
         pauseAll: function pauseAll() {
-            var all = lifeAudio.getAll();
+            var all = _lifeAudio2.default.getAll();
             var _iteratorNormalCompletion2 = true;
             var _didIteratorError2 = false;
             var _iteratorError2 = undefined;
@@ -687,7 +599,7 @@ if (ctx$1) {
          * 停止所有音频
          */
         stopAll: function stopAll() {
-            var all = lifeAudio.getAll();
+            var all = _lifeAudio2.default.getAll();
             var _iteratorNormalCompletion3 = true;
             var _didIteratorError3 = false;
             var _iteratorError3 = undefined;
@@ -718,8 +630,130 @@ if (ctx$1) {
     };
 }
 
-var benzAudioEngine$1 = benzAudioEngine;
+exports.default = benzAudioEngine;
 
-return benzAudioEngine$1;
+},{"./BenzAudio":1,"./BenzBuffer":2,"./audioContext":3,"./bufferCache":5,"./lifeAudio":6}],5:[function(require,module,exports){
+"use strict";
 
-}());
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+/**
+ * @file 缓存已经 load 过的 buffer
+ * @author BenzLeung(https://github.com/BenzLeung)
+ * @date 2017/3/30
+ * Created by JetBrains PhpStorm.
+ *
+ * 每位工程师都有保持代码优雅的义务
+ * each engineer has a duty to keep the code elegant
+ */
+
+var resList = {};
+
+function save(src, bufferObject) {
+    if (bufferObject) {
+        resList[src] = bufferObject;
+    }
+}
+
+function load(src) {
+    if (resList.hasOwnProperty(src)) {
+        return resList[src];
+    }
+    return null;
+}
+
+function release(src) {
+    if (resList.hasOwnProperty(src)) {
+        delete resList[src];
+    }
+}
+
+exports.default = {
+    save: save,
+    load: load,
+    release: release
+};
+
+},{}],6:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
+
+/**
+ * @file 存储正在播放的音频，并分配id
+ * @author BenzLeung(https://github.com/BenzLeung)
+ * @date 2017/3/30
+ * Created by JetBrains PhpStorm.
+ *
+ * 每位工程师都有保持代码优雅的义务
+ * each engineer has a duty to keep the code elegant
+ */
+
+var nextId = 1;
+var idRecycled = [];
+var audioMap = {};
+
+function allocId() {
+    if (idRecycled.length) {
+        return idRecycled.shift();
+    }
+    return nextId++;
+}
+
+function recycledId(id) {
+    idRecycled.push(id);
+}
+
+function save(audioObject) {
+    var id = allocId();
+    audioMap[id] = audioObject;
+    return id;
+}
+
+function load(id) {
+    if (audioMap.hasOwnProperty(id)) {
+        return audioMap[id];
+    }
+    return null;
+}
+
+function release(id) {
+    if (audioMap.hasOwnProperty(id)) {
+        delete audioMap[id];
+        recycledId(id);
+    }
+}
+
+function getAll() {
+    return [].concat(_toConsumableArray(audioMap.values()));
+}
+
+exports.default = {
+    save: save,
+    load: load,
+    release: release,
+    getAll: getAll
+};
+
+},{}],7:[function(require,module,exports){
+'use strict';
+
+/**
+ * @file browserify 入口
+ * @author BenzLeung(https://github.com/BenzLeung)
+ * @date 2017/12/9
+ * Created by JetBrains PhpStorm.
+ *
+ * 每位工程师都有保持代码优雅的义务
+ * each engineer has a duty to keep the code elegant
+ */
+
+module.exports = require('./benzAudioEngine.js').default;
+
+},{"./benzAudioEngine.js":4}]},{},[7])(7)
+});
