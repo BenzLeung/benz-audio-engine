@@ -31,8 +31,8 @@ class BenzBuffer {
         const request = new XMLHttpRequest();
         request.open('GET', this._src, true);
         request.responseType = 'arraybuffer';
-        request.onload = function () {
-            ctx['decodeAudioData'](request.response, function (data) {
+        request.onload = () => {
+            ctx['decodeAudioData'](request.response, (data) => {
                 this._buffer = data;
                 this._isLoaded = true;
                 for (let i = 0, len = this._onLoadFuncQueue.length; i < len; i ++) {
@@ -42,7 +42,7 @@ class BenzBuffer {
                     }
                 }
                 this._onLoadFuncQueue = [];
-            }.bind(this), function(){
+            }, () => {
                 //decode fail
                 this._isLoaded = true;
                 for (let i = 0, len = this._onLoadFuncQueue.length; i < len; i ++) {
@@ -52,8 +52,8 @@ class BenzBuffer {
                     }
                 }
                 this._onLoadFuncQueue = [];
-            }.bind(this));
-        }.bind(this);
+            });
+        };
         request.send();
     }
 
@@ -82,7 +82,7 @@ class BenzBuffer {
             name = `${this._src}\$${i}`;
         }
 
-        this.onload(function () {
+        this.onload(() => {
             let sampleRate = this._buffer['sampleRate'];
             let startSample = Math.floor(sampleRate * startTime);
             let endSample = Math.ceil(sampleRate * endTime);
@@ -98,7 +98,7 @@ class BenzBuffer {
             }
 
             new BenzBuffer(name, spriteBuffer);
-        }.bind(this));
+        });
         return name;
     }
 }

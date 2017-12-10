@@ -170,32 +170,34 @@ var BenzBuffer = function () {
     _createClass(BenzBuffer, [{
         key: '_load',
         value: function _load() {
+            var _this = this;
+
             var request = new XMLHttpRequest();
             request.open('GET', this._src, true);
             request.responseType = 'arraybuffer';
             request.onload = function () {
                 _audioContext2.default['decodeAudioData'](request.response, function (data) {
-                    this._buffer = data;
-                    this._isLoaded = true;
-                    for (var i = 0, len = this._onLoadFuncQueue.length; i < len; i++) {
-                        var cb = this._onLoadFuncQueue[i];
+                    _this._buffer = data;
+                    _this._isLoaded = true;
+                    for (var i = 0, len = _this._onLoadFuncQueue.length; i < len; i++) {
+                        var cb = _this._onLoadFuncQueue[i];
                         if (typeof cb === 'function') {
                             cb();
                         }
                     }
-                    this._onLoadFuncQueue = [];
-                }.bind(this), function () {
+                    _this._onLoadFuncQueue = [];
+                }, function () {
                     //decode fail
-                    this._isLoaded = true;
-                    for (var i = 0, len = this._onLoadFuncQueue.length; i < len; i++) {
-                        var cb = this._onLoadFuncQueue[i];
+                    _this._isLoaded = true;
+                    for (var i = 0, len = _this._onLoadFuncQueue.length; i < len; i++) {
+                        var cb = _this._onLoadFuncQueue[i];
                         if (typeof cb === 'function') {
                             cb();
                         }
                     }
-                    this._onLoadFuncQueue = [];
-                }.bind(this));
-            }.bind(this);
+                    _this._onLoadFuncQueue = [];
+                });
+            };
             request.send();
         }
     }, {
@@ -218,6 +220,8 @@ var BenzBuffer = function () {
     }, {
         key: 'createSprite',
         value: function createSprite(startTime, endTime, customName) {
+            var _this2 = this;
+
             var name = customName || '';
             if (!name) {
                 var i = 1;
@@ -228,22 +232,22 @@ var BenzBuffer = function () {
             }
 
             this.onload(function () {
-                var sampleRate = this._buffer['sampleRate'];
+                var sampleRate = _this2._buffer['sampleRate'];
                 var startSample = Math.floor(sampleRate * startTime);
                 var endSample = Math.ceil(sampleRate * endTime);
-                var numberOfChannels = this._buffer['numberOfChannels'];
+                var numberOfChannels = _this2._buffer['numberOfChannels'];
 
                 var spriteBuffer = _audioContext2.default['createBuffer'](numberOfChannels, endSample - startSample, sampleRate);
                 for (var c = 0; c < numberOfChannels; c++) {
                     var target = spriteBuffer['getChannelData'](c);
-                    var source = this._buffer['getChannelData'](c);
+                    var source = _this2._buffer['getChannelData'](c);
                     for (var s = startSample, t = 0; s < endSample; s++, t++) {
                         target[t] = source[s];
                     }
                 }
 
                 new BenzBuffer(name, spriteBuffer);
-            }.bind(this));
+            });
             return name;
         }
     }]);
