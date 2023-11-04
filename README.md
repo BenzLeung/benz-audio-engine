@@ -217,7 +217,7 @@ benzAudioEngine.load(srcArray, callback);
  */
 benzAudioEngine.sprite(src, spriteData);
 
-// 示例：
+// Example：
 benzAudioEngine.sprite('path/to/a.mp3', {
     'a.mp3$1' : [0.0, 1.5],
     'a.mp3$2' : [1.85, 2.63],
